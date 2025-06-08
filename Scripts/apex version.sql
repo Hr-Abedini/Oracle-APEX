@@ -1,0 +1,28 @@
+﻿SELECT VERSION_NO,
+	   API_COMPATIBILITY,
+	   PATCH_APPLIED
+FROM APEX_RELEASE;
+
+--------------------- older installed versions of APEX
+/*
+SELECT VERSION_NO
+FROM APEX_040100.APEX_RELEASE;
+*/
+
+-----------------USER: sys
+SELECT COMP_ID,
+	   COMP_NAME,
+	   VERSION,
+	   VERSION_FULL,
+	   STATUS,
+	   MODIFIED,
+	   NAMESPACE,
+	   CONTROL,
+	   SCHEMA,
+	   PROCEDURE,
+	   STARTUP,
+	   PARENT_ID,
+	   OTHER_SCHEMAS
+FROM DBA_REGISTRY
+WHERE COMP_NAME = 'Oracle Application Express'
+   OR COMP_ID = 'APEX';
