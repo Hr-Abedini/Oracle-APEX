@@ -1,4 +1,8 @@
-﻿DECLARE
+-------------------------- Oracle SQL Developer
+SET SERVEROUTPUT ON;
+SET DEFINE OFF;
+--------------------------
+DECLARE
    v_path		 VARCHAR2(2000) := 'f?p=&APP_ID.:0:&APP_SESSION.:APPLICATION_PROCESS=MY_PRC:::APP_ID:&APP_USER.';
    v_param_name		 VARCHAR2(100);
    v_param		 VARCHAR2(100);
