@@ -5,6 +5,8 @@
 // Item
 //====================================================================
 //====================================================================
+
+
 /**
  * تغییر متن => بزرگ، کوچک، بزرگ کردن حروف اول
  * 
@@ -35,7 +37,6 @@ function ChangeTextMode(textVal, textMode) {
  * 
  ** type: number field
  ** برای قرارگرفتن دکمه > post text = *
- ** css: btn-container-spin, btn-inc, btn-dec
  * 
  * 
  * @param itemName > نام آیتم
@@ -44,29 +45,30 @@ function ChangeTextMode(textVal, textMode) {
  * @param negative > باشد false جلوگیری از مقدار منفی اگر مقدار
  * @param groupingSymbol > کاراکتر جداکننده ارقام
  */
-function Item_UpDownNumber(itemName, wheel_step = 10, ud_step = 1, negative = false, groupingSymbol = ',') {
+function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = false, groupingSymbol = ',') {
 
-    let btn = '<div class="btn-container-spin">    <button type="button" class="btn-inc">▲</button>      <button type="button" class="btn-dec">▼</button>  </div>'
-    let container = "#" + itemName + "_CONTAINER";
-    let containter$ = $("#" + itemName + "_CONTAINER .t-Form-itemText--post");
-
-    containter$.html(btn);
-    // بعد از اضافه شدن
-    let btnUp$ = $(container + " .btn-inc");
-    let btnDown$ = $(container + " .btn-dec");
-    //----------------------------------------------
+    //  ** css: btn-container-spin, btn-inc, btn-dec
+    // let btn = '<div class="btn-container-spin">    <button type="button" class="btn-inc">▲</button>      <button type="button" class="btn-dec">▼</button>  </div>'
+    // let container = "#" + itemName + "_CONTAINER";
     // let containter$ = $("#" + itemName + "_CONTAINER .t-Form-itemText--post");
 
-    // let css_btn = { background: "none", border: "none", cursor: "pointer" };
-    // let css_div = { display: "inline-flex", "flex-direction": "column", "vertical-align": "middle" };
+    // containter$.html(btn);
+    // // بعد از اضافه شدن
+    // let btnUp$ = $(container + " .btn-inc");
+    // let btnDown$ = $(container + " .btn-dec");
+    //----------------------------------------------
+    let containter$ = $("#" + itemName + "_CONTAINER .t-Form-itemText--post");
 
-    // let div$ = $('<div>').css(css_div);
-    // let btnUp$ = $('<button>', { type: "button", text: '▲' }).css(css_btn);
-    // let btnDown$ = $('<button>', { type: "button", text: '▼' }).css(css_btn);
+    let css_btn = { background: "none", border: "none", cursor: "pointer" };
+    let css_div = { display: "inline-flex", "flex-direction": "column", "vertical-align": "middle" };
 
-    // div$.append(btnUp$);
-    // div$.append(btnDown$);
-    // containter$.html(div$);
+    let div$ = $('<div>').css(css_div);
+    let btnUp$ = $('<button>', { type: "button", text: '▲' }).css(css_btn);
+    let btnDown$ = $('<button>', { type: "button", text: '▼' }).css(css_btn);
+
+    div$.append(btnUp$);
+    div$.append(btnDown$);
+    containter$.html(div$);
     //----------------------------------------------
     let item$ = $("#" + itemName);
 
@@ -74,10 +76,12 @@ function Item_UpDownNumber(itemName, wheel_step = 10, ud_step = 1, negative = fa
     btnDown$.on("click", dec.bind(null,ud_step));
 
     item$.on("wheel", function (e) {
-
-        if (document.activeElement.id !== itemName) return;
-
         e.preventDefault();
+
+        // آیا فوکوس دارد؟
+        if (document.activeElement.id !== itemName) 
+            return;
+        
         let delta = e.originalEvent.deltaY;
 
         if (delta < 0) {
@@ -96,7 +100,7 @@ function Item_UpDownNumber(itemName, wheel_step = 10, ud_step = 1, negative = fa
 
     function dec(step) {
         let val = parseFloat(item$.val().replace(groupingSymbol, '')) || 0;
-        console.log(val);
+       
         val = val - step
         if (negative == false & val < 0) val = 0;
 
