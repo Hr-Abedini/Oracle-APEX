@@ -1,11 +1,4 @@
 
-//====================================================================
-//====================================================================
-// Hr.Abedini - 1404/09/10
-// Item
-//====================================================================
-//====================================================================
-
 
 /**
  * تغییر متن => بزرگ، کوچک، بزرگ کردن حروف اول
@@ -15,7 +8,7 @@
  *   
  * @returns > مقدار اصلاح شده
  */
-function ChangeTextMode(textVal, textMode) {
+function changeTextMode(textVal, textMode) {
 
     let result;
 
@@ -45,7 +38,7 @@ function ChangeTextMode(textVal, textMode) {
  * @param negative > باشد false جلوگیری از مقدار منفی اگر مقدار
  * @param groupingSymbol > کاراکتر جداکننده ارقام
  */
-function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = false, groupingSymbol = ',') {
+function item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = false, groupingSymbol = ',') {
 
     //  ** css: btn-container-spin, btn-inc, btn-dec
     // let btn = '<div class="btn-container-spin">    <button type="button" class="btn-inc">▲</button>      <button type="button" class="btn-dec">▼</button>  </div>'
@@ -72,16 +65,14 @@ function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
     //----------------------------------------------
     let item$ = $("#" + itemName);
 
-    btnUp$.on("click",  inc.bind(null,ud_step));
-    btnDown$.on("click", dec.bind(null,ud_step));
+    btnUp$.on("click", inc.bind(null, ud_step));
+    btnDown$.on("click", dec.bind(null, ud_step));
 
     item$.on("wheel", function (e) {
-        e.preventDefault();
 
-        // آیا فوکوس دارد؟
-        if (document.activeElement.id !== itemName) 
-            return;
-        
+        if (document.activeElement.id !== itemName) return;
+
+        e.preventDefault();
         let delta = e.originalEvent.deltaY;
 
         if (delta < 0) {
@@ -100,7 +91,7 @@ function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
 
     function dec(step) {
         let val = parseFloat(item$.val().replace(groupingSymbol, '')) || 0;
-       
+
         val = val - step
         if (negative == false & val < 0) val = 0;
 
@@ -120,20 +111,21 @@ function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
  *   * post text = *
  *   * Item Post Text = Display as Block
  * 
- * @param itemName > نام آیتم
+ * @param {string} itemName > نام آیتم
  * @param tagType > نوع تگ مورد استفاده (a , button)
- * @param {Object} [options] - تنظیمات اختیاری برای عنصر.
+ * 
+ * @param {Object} options - تنظیمات اختیاری برای عنصر.
  * @param {string} [options.text] 
  * @param {string} [options.class]
  * @param {Object|string} [options.style]
  * ---------------------------------------------------------- 
  * @examples >
-    1. Item_ChangeTextMode('P10_NAME','a')
-    2. Item_ChangeTextMode('P10_NAME','button'}
-    3. Item_ChangeTextMode('P10_NAME','button',{class:'btn-txt-mode',text:'Aa',style: { color: "white", backgroundColor: "#007bff" }})
-    4. Item_ChangeTextMode('P10_NAME','button',{style: "text-decoration:none; color:red;"})
+    1. item_ChangeTextMode('P10_NAME','a')
+    2. item_ChangeTextMode('P10_NAME','button'}
+    3. item_ChangeTextMode('P10_NAME','button',{class:'btn-txt-mode',text:'Aa',style: { color: "white", backgroundColor: "#007bff" }})
+    4. item_ChangeTextMode('P10_NAME','button',{style: "text-decoration:none; color:red;"})
   */
-function Item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
+function item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
 
     let icon = " fa fa-change-case ";
     let containter$ = $("#" + itemName + "_CONTAINER .t-Form-itemText--post");
@@ -163,7 +155,7 @@ function Item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
         // بروزرسانی مرحله بعدی
         //mode <0  => math.abs
         textMode = (textMode + 1) % 3;
-        let result = ChangeTextMode(val, textMode);
+        let result = changeTextMode(val, textMode);
         apex.item(itemName).setValue(result);
 
         $(this).attr('title', modes[textMode]);
@@ -171,4 +163,110 @@ function Item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
     });
 
     containter$.html(element$);
+}
+
+// -------------------------------------------------------------------------------
+// Shuttle
+// -------------------------------------------------------------------------------
+/**
+ * فیلتر کردن مقادیر ستون چپ (اول)
+ *  
+ * @param {string} searchItemName   > نام آیتم جستجو    
+ * @param {string} shuttleName      > نام شاتل        
+ */
+function item_Shuttle_FilterLeftSide(searchItemName, shuttleName) {
+    let leftSide = shuttleName + '_LEFT';
+    item_Shuttle_Filter(searchItemName, leftSide);
+}
+
+/**
+ * فیلتر کردن مقادیر ستون راست (دوم)
+ *  
+ * @param {string} searchItemName   > نام آیتم جستجو    
+ * @param {string} shuttleName      > نام شاتل        
+ */
+function item_Shuttle_FilterRightSide(searchItemName, shuttleName) {
+    let rightSide = shuttleName + '_RIGHT';
+    item_Shuttle_Filter(searchItemName, rightSide);
+}
+
+/**
+ * جستجو در شاتل چپ یا راست
+ * 
+ * @param {string} searchItemName   > نام آیتم جستجو    
+ * @param {string} shuttleSideName  > نام ستون شاتل (_LEFT, _RIGHT)
+ */
+function item_Shuttle_Filter(searchItemName, shuttleSideName) {
+    const searchText = apex.item(searchItemName).getValue().toLowerCase();
+    const selectEl = document.getElementById(shuttleSideName);
+    const options = selectEl.options;
+
+    for (let i = 0; i < options.length; i++) {
+        const optionText = options[i].text.toLowerCase();
+        options[i].hidden = !optionText.includes(searchText);
+
+        // options[i].style.display = optionText.includes(searchText) ? "" : "none";
+    }
+}
+
+
+function item_Shuttle_CountOfLeftSide(shuttleName) {
+    let leftSide = shuttleName + '_LEFT';
+    let count = item_Shuttle_Count(leftSide);
+    
+    return count;
+}
+
+function item_Shuttle_CountOfRightSide(shuttleName) {
+    let rightSide = shuttleName + '_RIGHT';
+    let count = item_Shuttle_Count(rightSide);
+
+    return count;
+}
+
+function item_Shuttle_Count(shuttleSideName) {    
+    const selectEl = document.getElementById(shuttleSideName);
+    const options = selectEl.options;
+
+    return options.length; 
+}
+
+
+
+function item_Shuttle_MoveLeftToRight(shuttleName) {
+    item_Shuttle_MoveAll(shuttleName, 'ltr');
+}
+
+function item_Shuttle_MoveRightToLeft(shuttleName) {  
+    item_Shuttle_MoveAll(shuttleName, 'rtl');
+}
+/**
+ * در زمان فیلتر کردن ستون چپ یا راست move all, remove all بازنویسی دکمه 
+ * در این حالت مقادیری که فیلتر شده‌اند نباید به ستون کناری منتقل شوند
+ * @param {string} shuttleName  > نام شاتل      
+ * @param {string} moveType     > سمت حرکت (ltr, rtl)
+
+ ** ltr : Left to Right
+ ** rtl : Right to Left
+ */
+function item_Shuttle_MoveAll(shuttleName, moveType) {
+    const moveAllBtn = document.getElementById(shuttleName + (moveType == 'ltr' ? '_MOVE_ALL' : '_REMOVE_ALL'));
+
+    moveAllBtn.addEventListener("click",
+        function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const source = document.getElementById(shuttleName + (moveType == 'ltr' ? '_LEFT' : '_RIGHT'));
+            const target = document.getElementById(shuttleName + (moveType == 'ltr' ? '_RIGHT' : '_LEFT'));
+
+              console.log(moveType);
+           
+            for (let i = source.options.length - 1; i >= 0; i--) {
+                const option = source.options[i];
+                if (!option.hidden) {
+                    target.add(option);
+                }
+            }
+        }, true); // capture phase
 }

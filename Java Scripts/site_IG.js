@@ -1,7 +1,14 @@
+//====================================================================
+//  Hr.Abedini - 1403/12/07
+//
+// 1404/03/03
+// 1404/07/13 - model, count ...
+//====================================================================
+
+
 
 //====================================================================
 //====================================================================
-// Hr.Abedini - 1403/12/07
 // IG: Interactive Grid
 //====================================================================
 //====================================================================
@@ -53,19 +60,29 @@ function IG_GetSelectedValue(ig, colName) {
  * 
  * @param {*} ig > this
  */
-//
-//نام قبلی  => IG_SelectedValues
-//
-function IG_GetSelectedValues(ig) {
-    try {
+function ig_GetSelectedRows(ig) {
 
-        let selectedRec = ig.data.selectedRecords;
-        return selectedRec;
+    let selectedRec = ig.data.selectedRecords;
+    return selectedRec;
+}
 
-    } catch (error) {
-        console.log(error);
-        return 'err';
-    }
+/**
+ * دریافت مقدار(ها) ستون مشخص شده از ردیف‌(های) انتخاب شده
+ * @param {*} ig > this
+ * @param {string} colName > نام فیلد مورد نظر
+ */
+
+function ig_SelectedRowsColumnValues(ig, colName) {
+
+    let selectedRecords = ig.data.selectedRecords;
+    let model = ig.data.model;
+    let vals = selectedRecords.map
+        (function (record) {
+            return model.getValue(record, colName);
+        }
+        );
+
+    return vals;
 }
 
 
@@ -91,14 +108,27 @@ function IG_GetSelectedValue_LOV(ig, colName) {
 //
 
 /**
- * @param {string} igId 
- * @return > IG
+ * @param {string} igId  > static id
+ * @return > IG View
  */
-function IG_GetIG_Grid(igId) {
+function IG_GetView(igId) {
 
     let igRegion = apex.region(igId).widget();
     let gridView = igRegion.interactiveGrid("getViews", "grid");
     return gridView;
+}
+
+
+/**
+ * @param {string} igId  > static id
+ * @return > IG Model
+ */
+function IG_GetModel(igId) {
+
+    let gridView = IG_GetView(igId);
+    let model = gridView.model;
+
+    return model;
 }
 
 
@@ -112,11 +142,10 @@ function IG_GetIG_Grid(igId) {
  */
 //نام قبلی  => IG_ColumnIndex_Design
 function IG_GetColumnIndex_InDesign(igId, colName) {
-    
-    let gridView = IG_GetIG_Grid(igId);
-    let model = gridView.model;
 
+    let model = IG_GetModel(igId);
     let colIndex = model.getFieldKey(colName);
+
     return colIndex;
 }
 
@@ -294,20 +323,164 @@ function IG_ChangeRowStyle(igId, colId, searchByVal, className) {
 
 /**
  *  Toolbar تغییر جای المان به داخل
+ * * محل استفاده: Page | Execute when Page Loads 
+ * @param {string} igId > Interactive Grid شناسه
  * @param {string} elementId > المنتی که می‌خواهیم جای آن تغییر کند
  */
-function IG_AddToToolbar_Start(elementId) {
+function ig_AddToToolbar_Start(igId, elementId) {
     let groupNameID = 'my-group-elements'
-    let innerDiv = $('#' + groupNameID)
+    let $innerDiv = $('#' + groupNameID)
+    let $element = $('#' + elementId);
 
-    if (innerDiv.length == 0) {
+    if ($innerDiv.length == 0) {
         // console.log('x');
-        innerDiv = $('<div></div>').attr('id', groupNameID).addClass('a-Toolbar-group');
+        $innerDiv = $('<div></div>').attr('id', groupNameID).addClass('a-Toolbar-group');
     }
 
-    innerDiv.append($(elementId));
+    $innerDiv.append($element);
 
     /*-----------------------------------*/
-    let divTag = $('.a-Toolbar-groupContainer.a-Toolbar-groupContainer--start')
-    divTag.append(innerDiv);
+    let divTag = $('#' + igId + ' .a-Toolbar-groupContainer.a-Toolbar-groupContainer--start')
+
+    divTag.append($innerDiv);
 }
+
+
+/**
+ *  تعداد رکوردهای موجود
+ *  @param {string} igId
+ */
+function IG_RowCount(igId) {
+    let model = IG_GetModel(igId);
+    let rowCount = model.getTotalRecordsCount();
+
+    return rowCount;
+}
+
+
+/**
+ *  تعداد رکوردهای درج شده
+ *  @param {string} igId
+ */
+function IG_RowCount_Inserted(igId) {
+    let model = IG_GetModel(igId);
+    let insertedRecords = model.getChanges().inserted;
+    let rowCount = insertedRecords ? insertedRecords.length : 0;
+
+    return rowCount;
+}
+
+
+
+// -----------------------------------------------------------------------------
+// actions
+// -----------------------------------------------------------------------------
+/**
+ *  دریافت اکشن های قابل استفاده
+ *  @param {string} igId
+ *  @return > apex.actions
+ */
+function ig_GetActions(igId) {
+    let ig$ = apex.region(igId).widget();
+    let actions = ig$.interactiveGrid("getActions");
+
+    // console.log(actions);
+    return actions;
+}
+
+/**
+ * ثبت تغییرات 
+ * 
+ * برای زمانی مناسب است که بخواهیم با استفاده از دکمه ثبت خودمان، این کار را انجام دهیم
+ *  @param {string} igId
+ */
+function IG_Save(igId) {
+    let actions = ig_GetActions(igId);
+    actions.invoke("save");
+}
+
+/**
+ * اضافه کردن رکورد به ابتدا
+ *  @param {string} igId
+ */
+function IG_AddRowAtStart(igId) {
+
+    let ig$ = apex.region(igId).widget();
+    let actions = ig_GetActions(igId);
+
+    ig$.interactiveGrid("setSelectedRecords", []);
+    actions.invoke("selection-add-row");
+}
+
+
+/**
+ *  اضافه کردن رکورد به انتها
+  *  @param {string} igId
+ */
+function IG_AddRowAtEnd(igId) {
+
+    let ig$ = apex.region(igId).widget();
+    let actions = ig_GetActions(igId); //ig$.interactiveGrid("getActions");
+    let grid$ = ig$.interactiveGrid("getViews").grid.view$;
+
+    // 
+    // if (!grid$ || !actions) {
+    //     console.error("IG not ready:", igId);
+    //     return;
+    // }
+
+    // انتخاب آخرین ردیف
+    grid$.grid("setSelection", grid$.find("tr").last());
+
+    // اجرای اکشن پیش‌فرض اضافه‌کردن ردیف
+    actions.invoke("selection-add-row");
+}
+
+/**
+ *  اضافه کردن رکورد به ابتدا / انتها با استفاده از دکمه 
+ * 
+ * استفاده در: Execute when Page Loads
+ * @param {string} igId
+ * @param position > start / end
+ */
+
+function IG_AddRowByAddButton(igId, position) {
+
+    var ig$ = apex.region(igId).widget();
+
+    // پیدا کردن دکمه Add Row داخل toolbar IG
+    var addBtn = ig$.find("button[data-action='selection-add-row']");
+
+    if (!addBtn.length) {
+        console.warn("Add Row button not found inside IG:", igId);
+        return;
+    }
+
+    position = position.toLowerCase(position);
+
+    addBtn.off("click.custom").on("click.custom", function (e) {
+        e.stopImmediatePropagation(); // جلوگیری از اجرای handler داخلی
+        e.preventDefault();            // جلوگیری از رفتار پیش‌فرض       
+
+        switch (position) {
+            case 'start':
+                IG_AddRowAtStart(igId);
+                break;
+            case 'end':
+                IG_AddRowAtEnd(igId);
+                break;
+            default:
+                console.error('Invalid position: ' + position);
+        }
+
+    });
+
+}
+
+
+//====================================================================
+//====================================================================
+// End IG
+//====================================================================
+//====================================================================
+
