@@ -101,7 +101,7 @@ function item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
 }
 
 
-
+//====================================================================
 
 /**
  * تغییر حالت کلمات: حرف اول بزرگ، بزگ، کوچک
@@ -165,9 +165,12 @@ function item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
     containter$.html(element$);
 }
 
-// -------------------------------------------------------------------------------
+//====================================================================
 // Shuttle
-// -------------------------------------------------------------------------------
+//====================================================================
+//--------------------------------------------------------------------
+// shuttle | filter
+//--------------------------------------------------------------------
 /**
  * فیلتر کردن مقادیر ستون چپ (اول)
  *  
@@ -192,6 +195,7 @@ function item_Shuttle_FilterRightSide(searchItemName, shuttleName) {
 
 /**
  * جستجو در شاتل چپ یا راست
+ * توسط متدهای دیگر فراخوانی می‌شود
  * 
  * @param {string} searchItemName   > نام آیتم جستجو    
  * @param {string} shuttleSideName  > نام ستون شاتل (_LEFT, _RIGHT)
@@ -209,37 +213,28 @@ function item_Shuttle_Filter(searchItemName, shuttleSideName) {
     }
 }
 
+//--------------------------------------------------------------------
+// shuttle | move 
+//--------------------------------------------------------------------
 
-function item_Shuttle_CountOfLeftSide(shuttleName) {
-    let leftSide = shuttleName + '_LEFT';
-    let count = item_Shuttle_Count(leftSide);
-    
-    return count;
-}
-
-function item_Shuttle_CountOfRightSide(shuttleName) {
-    let rightSide = shuttleName + '_RIGHT';
-    let count = item_Shuttle_Count(rightSide);
-
-    return count;
-}
-
-function item_Shuttle_Count(shuttleSideName) {    
-    const selectEl = document.getElementById(shuttleSideName);
-    const options = selectEl.options;
-
-    return options.length; 
-}
-
-
-
+/**
+ * فعال کردن انتقال از لیست یک به دو
+ * move all بازنویسی دکمه
+ * @param {string} shuttleName 
+ */
 function item_Shuttle_MoveLeftToRight(shuttleName) {
     item_Shuttle_MoveAll(shuttleName, 'ltr');
 }
 
+/**
+ * فعال کردن انتقال از لیست دو به یک
+ * remove all بازنویسی دکمه
+ * @param {string} shuttleName 
+ */
 function item_Shuttle_MoveRightToLeft(shuttleName) {  
     item_Shuttle_MoveAll(shuttleName, 'rtl');
 }
+
 /**
  * در زمان فیلتر کردن ستون چپ یا راست move all, remove all بازنویسی دکمه 
  * در این حالت مقادیری که فیلتر شده‌اند نباید به ستون کناری منتقل شوند
@@ -260,7 +255,6 @@ function item_Shuttle_MoveAll(shuttleName, moveType) {
             const source = document.getElementById(shuttleName + (moveType == 'ltr' ? '_LEFT' : '_RIGHT'));
             const target = document.getElementById(shuttleName + (moveType == 'ltr' ? '_RIGHT' : '_LEFT'));
 
-              console.log(moveType);
            
             for (let i = source.options.length - 1; i >= 0; i--) {
                 const option = source.options[i];
@@ -270,3 +264,45 @@ function item_Shuttle_MoveAll(shuttleName, moveType) {
             }
         }, true); // capture phase
 }
+
+
+//--------------------------------------------------------------------
+// shuttle | count
+//--------------------------------------------------------------------
+/**
+ * بدست آوردن تعداد آیتم‌های لیست 1
+ * @param {string} shuttleName > نام شاتل 
+ */
+function item_Shuttle_CountOfLeftSide(shuttleName) {
+    let leftSide = shuttleName + '_LEFT';
+    let count = item_Shuttle_Count(leftSide);
+    
+    return count;
+}
+
+/**
+ * بدست آوردن تعداد آیتم‌های لیست 2
+ * @param {string} shuttleName > نام شاتل 
+ */
+function item_Shuttle_CountOfRightSide(shuttleName) {
+    let rightSide = shuttleName + '_RIGHT';
+    let count = item_Shuttle_Count(rightSide);
+
+    return count;
+}
+
+/**
+ * متد دریافت تعداد آیتم‌های لیست چپ(1) یا راست(2) شاتل
+ * توسط دو متد دیگر فراخوانی می‌شود
+ * @param {string} shuttleSideName  > نام "آیتم لیست" مورد نظر
+ */
+function item_Shuttle_Count(shuttleSideName) {    
+    const selectEl = document.getElementById(shuttleSideName);
+    const options = selectEl.options;
+
+    return options.length; 
+}
+
+//====================================================================
+// 
+//====================================================================
