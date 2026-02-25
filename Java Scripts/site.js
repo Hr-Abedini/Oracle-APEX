@@ -36,10 +36,17 @@ function EnhanceIG_CollapseTree() {
     $('[class*="apex-treegrid-parent-"]').each(function () { $(this).css('display', 'none') });
 }
 
+//====================================================================
+//  Hr.Abedini - 1403/12/07
+//
+// 1404/03/03
+// 1404/07/13 - model, count ...
+//====================================================================
+
+
 
 //====================================================================
 //====================================================================
-// Hr.Abedini - 1403/12/07
 // IG: Interactive Grid
 //====================================================================
 //====================================================================
@@ -91,19 +98,29 @@ function IG_GetSelectedValue(ig, colName) {
  * 
  * @param {*} ig > this
  */
-//
-//نام قبلی  => IG_SelectedValues
-//
-function IG_GetSelectedValues(ig) {
-    try {
+function ig_GetSelectedRows(ig) {
 
-        let selectedRec = ig.data.selectedRecords;
-        return selectedRec;
+    let selectedRec = ig.data.selectedRecords;
+    return selectedRec;
+}
 
-    } catch (error) {
-        console.log(error);
-        return 'err';
-    }
+/**
+ * دریافت مقدار(ها) ستون مشخص شده از ردیف‌(های) انتخاب شده
+ * @param {*} ig > this
+ * @param {string} colName > نام فیلد مورد نظر
+ */
+
+function ig_SelectedRowsColumnValues(ig, colName) {
+
+    let selectedRecords = ig.data.selectedRecords;
+    let model = ig.data.model;
+    let vals = selectedRecords.map
+        (function (record) {
+            return model.getValue(record, colName);
+        }
+        );
+
+    return vals;
 }
 
 
@@ -129,14 +146,27 @@ function IG_GetSelectedValue_LOV(ig, colName) {
 //
 
 /**
- * @param {string} igId 
- * @return > IG
+ * @param {string} igId  > static id
+ * @return > IG View
  */
-function IG_GetIG_Grid(igId) {
+function IG_GetView(igId) {
 
     let igRegion = apex.region(igId).widget();
     let gridView = igRegion.interactiveGrid("getViews", "grid");
     return gridView;
+}
+
+
+/**
+ * @param {string} igId  > static id
+ * @return > IG Model
+ */
+function IG_GetModel(igId) {
+
+    let gridView = IG_GetView(igId);
+    let model = gridView.model;
+
+    return model;
 }
 
 
@@ -150,11 +180,10 @@ function IG_GetIG_Grid(igId) {
  */
 //نام قبلی  => IG_ColumnIndex_Design
 function IG_GetColumnIndex_InDesign(igId, colName) {
-    
-    let gridView = IG_GetIG_Grid(igId);
-    let model = gridView.model;
 
+    let model = IG_GetModel(igId);
     let colIndex = model.getFieldKey(colName);
+
     return colIndex;
 }
 
@@ -332,23 +361,167 @@ function IG_ChangeRowStyle(igId, colId, searchByVal, className) {
 
 /**
  *  Toolbar تغییر جای المان به داخل
+ * * محل استفاده: Page | Execute when Page Loads 
+ * @param {string} igId > Interactive Grid شناسه
  * @param {string} elementId > المنتی که می‌خواهیم جای آن تغییر کند
  */
-function IG_AddToToolbar_Start(elementId) {
+function ig_AddToToolbar_Start(igId, elementId) {
     let groupNameID = 'my-group-elements'
-    let innerDiv = $('#' + groupNameID)
+    let $innerDiv = $('#' + groupNameID)
+    let $element = $('#' + elementId);
 
-    if (innerDiv.length == 0) {
+    if ($innerDiv.length == 0) {
         // console.log('x');
-        innerDiv = $('<div></div>').attr('id', groupNameID).addClass('a-Toolbar-group');
+        $innerDiv = $('<div></div>').attr('id', groupNameID).addClass('a-Toolbar-group');
     }
 
-    innerDiv.append($(elementId));
+    $innerDiv.append($element);
 
     /*-----------------------------------*/
-    let divTag = $('.a-Toolbar-groupContainer.a-Toolbar-groupContainer--start')
-    divTag.append(innerDiv);
+    let divTag = $('#' + igId + ' .a-Toolbar-groupContainer.a-Toolbar-groupContainer--start')
+
+    divTag.append($innerDiv);
 }
+
+
+/**
+ *  تعداد رکوردهای موجود
+ *  @param {string} igId
+ */
+function IG_RowCount(igId) {
+    let model = IG_GetModel(igId);
+    let rowCount = model.getTotalRecordsCount();
+
+    return rowCount;
+}
+
+
+/**
+ *  تعداد رکوردهای درج شده
+ *  @param {string} igId
+ */
+function IG_RowCount_Inserted(igId) {
+    let model = IG_GetModel(igId);
+    let insertedRecords = model.getChanges().inserted;
+    let rowCount = insertedRecords ? insertedRecords.length : 0;
+
+    return rowCount;
+}
+
+
+
+// -----------------------------------------------------------------------------
+// actions
+// -----------------------------------------------------------------------------
+/**
+ *  دریافت اکشن های قابل استفاده
+ *  @param {string} igId
+ *  @return > apex.actions
+ */
+function ig_GetActions(igId) {
+    let ig$ = apex.region(igId).widget();
+    let actions = ig$.interactiveGrid("getActions");
+
+    // console.log(actions);
+    return actions;
+}
+
+/**
+ * ثبت تغییرات 
+ * 
+ * برای زمانی مناسب است که بخواهیم با استفاده از دکمه ثبت خودمان، این کار را انجام دهیم
+ *  @param {string} igId
+ */
+function IG_Save(igId) {
+    let actions = ig_GetActions(igId);
+    actions.invoke("save");
+}
+
+/**
+ * اضافه کردن رکورد به ابتدا
+ *  @param {string} igId
+ */
+function IG_AddRowAtStart(igId) {
+
+    let ig$ = apex.region(igId).widget();
+    let actions = ig_GetActions(igId);
+
+    ig$.interactiveGrid("setSelectedRecords", []);
+    actions.invoke("selection-add-row");
+}
+
+
+/**
+ *  اضافه کردن رکورد به انتها
+  *  @param {string} igId
+ */
+function IG_AddRowAtEnd(igId) {
+
+    let ig$ = apex.region(igId).widget();
+    let actions = ig_GetActions(igId); //ig$.interactiveGrid("getActions");
+    let grid$ = ig$.interactiveGrid("getViews").grid.view$;
+
+    // 
+    // if (!grid$ || !actions) {
+    //     console.error("IG not ready:", igId);
+    //     return;
+    // }
+
+    // انتخاب آخرین ردیف
+    grid$.grid("setSelection", grid$.find("tr").last());
+
+    // اجرای اکشن پیش‌فرض اضافه‌کردن ردیف
+    actions.invoke("selection-add-row");
+}
+
+/**
+ *  اضافه کردن رکورد به ابتدا / انتها با استفاده از دکمه 
+ * 
+ * استفاده در: Execute when Page Loads
+ * @param {string} igId
+ * @param position > start / end
+ */
+
+function IG_AddRowByAddButton(igId, position) {
+
+    var ig$ = apex.region(igId).widget();
+
+    // پیدا کردن دکمه Add Row داخل toolbar IG
+    var addBtn = ig$.find("button[data-action='selection-add-row']");
+
+    if (!addBtn.length) {
+        console.warn("Add Row button not found inside IG:", igId);
+        return;
+    }
+
+    position = position.toLowerCase(position);
+
+    addBtn.off("click.custom").on("click.custom", function (e) {
+        e.stopImmediatePropagation(); // جلوگیری از اجرای handler داخلی
+        e.preventDefault();            // جلوگیری از رفتار پیش‌فرض       
+
+        switch (position) {
+            case 'start':
+                IG_AddRowAtStart(igId);
+                break;
+            case 'end':
+                IG_AddRowAtEnd(igId);
+                break;
+            default:
+                console.error('Invalid position: ' + position);
+        }
+
+    });
+
+}
+
+
+//====================================================================
+//====================================================================
+// End IG
+//====================================================================
+//====================================================================
+
 
 //====================================================================
 //====================================================================
@@ -392,13 +565,6 @@ function IR_ChangeRowStyle(irID, colId, searchByVal, className) {
 }
 
 
-//====================================================================
-//====================================================================
-// Hr.Abedini - 1404/09/10
-// Item
-//====================================================================
-//====================================================================
-
 
 /**
  * تغییر متن => بزرگ، کوچک، بزرگ کردن حروف اول
@@ -408,7 +574,7 @@ function IR_ChangeRowStyle(irID, colId, searchByVal, className) {
  *   
  * @returns > مقدار اصلاح شده
  */
-function ChangeTextMode(textVal, textMode) {
+function changeTextMode(textVal, textMode) {
 
     let result;
 
@@ -438,7 +604,7 @@ function ChangeTextMode(textVal, textMode) {
  * @param negative > باشد false جلوگیری از مقدار منفی اگر مقدار
  * @param groupingSymbol > کاراکتر جداکننده ارقام
  */
-function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = false, groupingSymbol = ',') {
+function item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = false, groupingSymbol = ',') {
 
     //  ** css: btn-container-spin, btn-inc, btn-dec
     // let btn = '<div class="btn-container-spin">    <button type="button" class="btn-inc">▲</button>      <button type="button" class="btn-dec">▼</button>  </div>'
@@ -465,16 +631,14 @@ function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
     //----------------------------------------------
     let item$ = $("#" + itemName);
 
-    btnUp$.on("click",  inc.bind(null,ud_step));
-    btnDown$.on("click", dec.bind(null,ud_step));
+    btnUp$.on("click", inc.bind(null, ud_step));
+    btnDown$.on("click", dec.bind(null, ud_step));
 
     item$.on("wheel", function (e) {
-        e.preventDefault();
 
-        // آیا فوکوس دارد؟
-        if (document.activeElement.id !== itemName) 
-            return;
-        
+        if (document.activeElement.id !== itemName) return;
+
+        e.preventDefault();
         let delta = e.originalEvent.deltaY;
 
         if (delta < 0) {
@@ -493,7 +657,7 @@ function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
 
     function dec(step) {
         let val = parseFloat(item$.val().replace(groupingSymbol, '')) || 0;
-       
+
         val = val - step
         if (negative == false & val < 0) val = 0;
 
@@ -503,7 +667,7 @@ function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
 }
 
 
-
+//====================================================================
 
 /**
  * تغییر حالت کلمات: حرف اول بزرگ، بزگ، کوچک
@@ -513,20 +677,21 @@ function Item_NumericSpinner(itemName, wheel_step = 10, ud_step = 1, negative = 
  *   * post text = *
  *   * Item Post Text = Display as Block
  * 
- * @param itemName > نام آیتم
+ * @param {string} itemName > نام آیتم
  * @param tagType > نوع تگ مورد استفاده (a , button)
- * @param {Object} [options] - تنظیمات اختیاری برای عنصر.
+ * 
+ * @param {Object} options - تنظیمات اختیاری برای عنصر.
  * @param {string} [options.text] 
  * @param {string} [options.class]
  * @param {Object|string} [options.style]
  * ---------------------------------------------------------- 
  * @examples >
-    1. Item_ChangeTextMode('P10_NAME','a')
-    2. Item_ChangeTextMode('P10_NAME','button'}
-    3. Item_ChangeTextMode('P10_NAME','button',{class:'btn-txt-mode',text:'Aa',style: { color: "white", backgroundColor: "#007bff" }})
-    4. Item_ChangeTextMode('P10_NAME','button',{style: "text-decoration:none; color:red;"})
+    1. item_ChangeTextMode('P10_NAME','a')
+    2. item_ChangeTextMode('P10_NAME','button'}
+    3. item_ChangeTextMode('P10_NAME','button',{class:'btn-txt-mode',text:'Aa',style: { color: "white", backgroundColor: "#007bff" }})
+    4. item_ChangeTextMode('P10_NAME','button',{style: "text-decoration:none; color:red;"})
   */
-function Item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
+function item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
 
     let icon = " fa fa-change-case ";
     let containter$ = $("#" + itemName + "_CONTAINER .t-Form-itemText--post");
@@ -556,7 +721,7 @@ function Item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
         // بروزرسانی مرحله بعدی
         //mode <0  => math.abs
         textMode = (textMode + 1) % 3;
-        let result = ChangeTextMode(val, textMode);
+        let result = changeTextMode(val, textMode);
         apex.item(itemName).setValue(result);
 
         $(this).attr('title', modes[textMode]);
@@ -565,3 +730,147 @@ function Item_ChangeTextMode(itemName, tagType = 'a', options = {}) {
 
     containter$.html(element$);
 }
+
+//====================================================================
+// Shuttle
+//====================================================================
+//--------------------------------------------------------------------
+// shuttle | filter
+//--------------------------------------------------------------------
+/**
+ * فیلتر کردن مقادیر ستون چپ (اول)
+ *  
+ * @param {string} searchItemName   > نام آیتم جستجو    
+ * @param {string} shuttleName      > نام شاتل        
+ */
+function item_Shuttle_FilterLeftSide(searchItemName, shuttleName) {
+    let leftSide = shuttleName + '_LEFT';
+    item_Shuttle_Filter(searchItemName, leftSide);
+}
+
+/**
+ * فیلتر کردن مقادیر ستون راست (دوم)
+ *  
+ * @param {string} searchItemName   > نام آیتم جستجو    
+ * @param {string} shuttleName      > نام شاتل        
+ */
+function item_Shuttle_FilterRightSide(searchItemName, shuttleName) {
+    let rightSide = shuttleName + '_RIGHT';
+    item_Shuttle_Filter(searchItemName, rightSide);
+}
+
+/**
+ * جستجو در شاتل چپ یا راست
+ * توسط متدهای دیگر فراخوانی می‌شود
+ * 
+ * @param {string} searchItemName   > نام آیتم جستجو    
+ * @param {string} shuttleSideName  > نام ستون شاتل (_LEFT, _RIGHT)
+ */
+function item_Shuttle_Filter(searchItemName, shuttleSideName) {
+    const searchText = apex.item(searchItemName).getValue().toLowerCase();
+    const selectEl = document.getElementById(shuttleSideName);
+    const options = selectEl.options;
+
+    for (let i = 0; i < options.length; i++) {
+        const optionText = options[i].text.toLowerCase();
+        options[i].hidden = !optionText.includes(searchText);
+
+        //options[i].style.display = optionText.includes(searchText) ? "" : "none";
+    }
+}
+
+//--------------------------------------------------------------------
+// shuttle | move 
+//--------------------------------------------------------------------
+
+/**
+ * فعال کردن انتقال از لیست یک به دو
+ * move all بازنویسی دکمه
+ * @param {string} shuttleName 
+ */
+function item_Shuttle_MoveAllButton(shuttleName) {
+    //ltr: left to right
+    item_Shuttle_MoveAll(shuttleName, 'ltr');
+}
+
+/**
+ * فعال کردن انتقال از لیست دو به یک
+ * remove all بازنویسی دکمه
+ * @param {string} shuttleName 
+ */
+function item_Shuttle_RemoveAllButton(shuttleName) {  
+    //rtl: right to left
+    item_Shuttle_MoveAll(shuttleName, 'rtl');
+}
+
+/**
+ * در زمان فیلتر کردن ستون چپ یا راست move all, remove all بازنویسی دکمه 
+ * در این حالت مقادیری که فیلتر شده‌اند نباید به ستون کناری منتقل شوند
+ * @param {string} shuttleName  > نام شاتل      
+ * @param {string} moveType     > سمت حرکت (ltr, rtl)
+
+ */
+function item_Shuttle_MoveAll(shuttleName, moveType) {
+    //ltr: left to right
+    //rtl: right to left
+    const moveAllBtn = document.getElementById(shuttleName + (moveType == 'ltr' ? '_MOVE_ALL' : '_REMOVE_ALL'));
+
+    moveAllBtn.addEventListener("click",
+        function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const source = document.getElementById(shuttleName + (moveType == 'ltr' ? '_LEFT' : '_RIGHT'));
+            const target = document.getElementById(shuttleName + (moveType == 'ltr' ? '_RIGHT' : '_LEFT'));
+              
+           
+            for (let i = source.options.length - 1; i >= 0; i--) {
+                const option = source.options[i];
+                if (!option.hidden) {
+                    target.add(option);
+                }
+            }
+        }, true); // capture phase
+}
+
+
+//--------------------------------------------------------------------
+// shuttle | count
+//--------------------------------------------------------------------
+/**
+ * بدست آوردن تعداد آیتم‌های لیست 1
+ * @param {string} shuttleName > نام شاتل 
+ */
+function item_Shuttle_CountOfLeftSide(shuttleName) {
+    let leftSide = shuttleName + '_LEFT';
+    let count = item_Shuttle_Count(leftSide);
+    
+    return count;
+}
+
+/**
+ * بدست آوردن تعداد آیتم‌های لیست 2
+ * @param {string} shuttleName > نام شاتل 
+ */
+function item_Shuttle_CountOfRightSide(shuttleName) {
+    let rightSide = shuttleName + '_RIGHT';
+    let count = item_Shuttle_Count(rightSide);
+
+    return count;
+}
+
+/**
+ * متد دریافت تعداد آیتم‌های لیست چپ(1) یا راست(2) شاتل
+ * توسط دو متد دیگر فراخوانی می‌شود
+ * @param {string} shuttleSideName  > نام "آیتم لیست" مورد نظر
+ */
+function item_Shuttle_Count(shuttleSideName) {    
+    const selectEl = document.getElementById(shuttleSideName);
+    const options = selectEl.options;
+
+    return options.length; 
+}
+
+//====================================================================
+// 
+//====================================================================

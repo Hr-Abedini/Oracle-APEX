@@ -209,7 +209,7 @@ function item_Shuttle_Filter(searchItemName, shuttleSideName) {
         const optionText = options[i].text.toLowerCase();
         options[i].hidden = !optionText.includes(searchText);
 
-        // options[i].style.display = optionText.includes(searchText) ? "" : "none";
+        //options[i].style.display = optionText.includes(searchText) ? "" : "none";
     }
 }
 
@@ -222,7 +222,8 @@ function item_Shuttle_Filter(searchItemName, shuttleSideName) {
  * move all بازنویسی دکمه
  * @param {string} shuttleName 
  */
-function item_Shuttle_MoveLeftToRight(shuttleName) {
+function item_Shuttle_MoveAllButton(shuttleName) {
+    //ltr: left to right
     item_Shuttle_MoveAll(shuttleName, 'ltr');
 }
 
@@ -231,7 +232,8 @@ function item_Shuttle_MoveLeftToRight(shuttleName) {
  * remove all بازنویسی دکمه
  * @param {string} shuttleName 
  */
-function item_Shuttle_MoveRightToLeft(shuttleName) {  
+function item_Shuttle_RemoveAllButton(shuttleName) {  
+    //rtl: right to left
     item_Shuttle_MoveAll(shuttleName, 'rtl');
 }
 
@@ -241,10 +243,10 @@ function item_Shuttle_MoveRightToLeft(shuttleName) {
  * @param {string} shuttleName  > نام شاتل      
  * @param {string} moveType     > سمت حرکت (ltr, rtl)
 
- ** ltr : Left to Right
- ** rtl : Right to Left
  */
 function item_Shuttle_MoveAll(shuttleName, moveType) {
+    //ltr: left to right
+    //rtl: right to left
     const moveAllBtn = document.getElementById(shuttleName + (moveType == 'ltr' ? '_MOVE_ALL' : '_REMOVE_ALL'));
 
     moveAllBtn.addEventListener("click",
@@ -254,7 +256,7 @@ function item_Shuttle_MoveAll(shuttleName, moveType) {
 
             const source = document.getElementById(shuttleName + (moveType == 'ltr' ? '_LEFT' : '_RIGHT'));
             const target = document.getElementById(shuttleName + (moveType == 'ltr' ? '_RIGHT' : '_LEFT'));
-
+              
            
             for (let i = source.options.length - 1; i >= 0; i--) {
                 const option = source.options[i];
