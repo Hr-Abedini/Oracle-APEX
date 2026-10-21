@@ -42,25 +42,21 @@ window.bpmn = {
 
     },
 
+
     /**
      * خواندن فایل بدون ارسال به سرور
      * @param fileBrowserId شناسه‌ی File Browser
-     * @param outputId شناسه‌ی عنصر نمایش محتوا (اختیاری)
-     **/
-    readFile: async function (fileBrowserId, outputId) {
+     * @returns {Promise<{content: string, filename: string}>}
+     */
+    readFile: async function (fileBrowserId) {
 
         const fileInput = document.getElementById(fileBrowserId);
         const file = fileInput.files[0];
 
+        const filename = file ? file.name : '';
         const content = file ? await file.text() : '';
 
-        await this.load(content);
-
-        if (!outputId)
-            return;
-
-        document.getElementById(outputId).textContent = content;
-
+        return { filename, content };
     },
 
     /**
@@ -81,16 +77,16 @@ window.bpmn = {
 
     /**
      * ارسال خروجی دیاگرام به یک عنصر
-     * @param item شناسه‌ی عنصر دریافت‌کننده‌ی خروجی
-     * @param format قالب‌بندی XML
+     * @param outputId شناسه‌ی عنصر دریافت‌کننده‌ی خروجی
+     * @param format مرتب کردن XML
      **/
-    exportXMLToItem: async function (item, format = true) {
+    exportXML: async function (outputId, format = true) {
 
         try {
             const { xml } = await this.modeler.saveXML({ format });
 
-            // apex.item(item).setValue(xml);
-            document.getElementById(item).value = xml;
+            // apex.item(outputId).setValue(xml);
+            document.getElementById(outputId).value = xml;
 
         } catch (err) {
             console.error('خطا در دریافت XML:', err);
@@ -101,7 +97,7 @@ window.bpmn = {
     /**
      * دانلود فایل XML
      * @param filename نام فایل
-     * @param format قالب‌بندی XML
+     * @param format مرتب کردن XML
      **/
     downloadXML: async function (filename = 'diagram.bpmn', format = true) {
 
@@ -182,7 +178,7 @@ window.bpmn = {
     // ============================================================
 
     /**
-     * تبدیل SVG به تصویر
+     * تبدیل SVG به تصویر     
      **/
     svgToImage: function (svg) {
 

@@ -18,7 +18,7 @@ const IMAGE_FORMAT = {
 };
 
 /**
-* مشخص کردن فضای نمایش مدل
+* اختصاص المان برای نمایش مدل
 **/
 function bpmn_init (containerId) {
     this.modeler = new BpmnJS({

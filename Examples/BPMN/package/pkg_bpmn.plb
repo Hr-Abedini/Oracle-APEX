@@ -5,40 +5,7 @@ create or replace package body "PKG_BPMN" as
     /*==================================================*/
     -- functions
     /*==================================================*/
-    
-    /*
-    -- در صورتی که بخواهیم تمام سمبل ها را داشته باشیم
-    -- بهتر است در یک متد مجزا و به صورت عمومی نگهداری انجام شود    
-    -- pipeliend -  sql_macro(table)
-
-    function get_symbols
-    return tbl_symbols pipelined
-    is
-    begin
-
-        for r in (
-                            SELECT 'Task' AS name, 'task' AS xml_name FROM dual
-                UNION ALL SELECT 'User Task', 'userTask' FROM dual
-                UNION ALL SELECT 'Manual Task', 'manualTask' FROM dual
-                UNION ALL SELECT 'Service Task', 'serviceTask' FROM dual
-                UNION ALL SELECT 'Script Task', 'scriptTask' FROM dual
-                UNION ALL SELECT 'Business Rule Task', 'businessRuleTask' FROM dual
-                UNION ALL SELECT 'Send Task', 'sendTask' FROM dual
-                UNION ALL SELECT 'Receive Task', 'receiveTask' FROM dual
-                UNION ALL SELECT 'Sub-Process', 'subProcess' FROM dual
-                UNION ALL SELECT 'Call Activity', 'callActivity' FROM dual
-                UNION ALL SELECT 'Transaction', 'transaction' FROM dual
-                UNION ALL SELECT 'Ad-Hoc Sub-Process', 'adHocSubProcess' FROM dual
-        ) loop
-            pipe row( rec_symbols('Activity', r.name, r.xml_name) );            
-        end loop;
-
         
-    end ;
-
-    */
-
-    /*==================================================*/
     function get_objects(p_xml in clob)
     return tbl_objs pipelined
     is
@@ -81,10 +48,7 @@ create or replace package body "PKG_BPMN" as
         v_xml xmltype;
     
     begin
-        if p_xml is null then
-            raise_application_error(-20001, 'BPMN XML is NULL');
-        end if;
-
+       
         v_xml := xmltype(p_xml);
 
 
